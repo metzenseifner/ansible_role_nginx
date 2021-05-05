@@ -1,0 +1,54 @@
+---
+# Handle files
+- name: "Files.-1.Initializing empty _{{ansible_role_name}}_disabled_files set (performance optimization)"
+  set_fact:
+    _nginx_disabled_files: {}
+  tags: files
+
+- name: "Files.0.Initializing empty _{{ansible_role_name}}_finalized_files set (performance optimization)"
+  set_fact:
+    _nginx_finalized_files: {} 
+  tags: files
+
+- name: "Files.1.Collecting _{{ansible_role_name}}_disabled_files set"
+  set_fact:
+    _nginx_disabled_files: '{{ _nginx_disabled_files | combine({item.file_id: item.path}) }}'
+  loop: '{{nginx_files | dict2items(key_name="file_id", value_name="path") }}'
+  when: 'item.path.disabled | default(false)'
+  tags: files
+
+- name: "Files.2.Removing disabled files from _{{ansible_role_name}}_default_files set"
+  set_fact:
+    _nginx_default_files: '{{ _nginx_default_files | combine({item.file_id: item.path}) }}'
+  loop: '{{ _nginx_default_files | dict2items(key_name="file_id", value_name="path") }}'
+  when: 'item.file_id not in _nginx_disabled_files'
+  tags: files
+
+- name: "Files.3.Append {{ansible_role_name}}_files to _{{ansible_role_name}}_finalized_files set"
+  set_fact:
+    _nginx_finalized_files: '{{ _nginx_finalized_files | combine({item.file_id: item.path}) }}'
+  loop: '{{ _nginx_default_files | dict2items(key_name="file_id", value_name="path") }}'
+  when: 'not (item.path.disabled | default(false))'
+  tags: files
+
+- name: "Files.4.Installing parent directories"
+  file:
+    path: '{{item.path.dest | dirname}}'
+    state: directory
+    recurse: true 
+    owner: '{{item.path.user | default(nginx_user)}}'
+    group: '{{item.path.group | default(nginx_group)}}'
+    mode: '{{item.path.dir_mode | default(0755)}}'
+  loop: '{{_nginx_finalized_files | dict2items(key_name="file_id", value_name="path")}}'
+  when: '"/" in item'
+  tags: files
+
+- name: "Files.5.Installing files"
+  copy:
+    src: '{{item.path.src}}'
+    dest: '{{item.path.dest}}'
+    owner: '{{item.path.user | default(nginx_user)}}'
+    group: '{{item.path.group | default(nginx_group)}}'
+    mode: '{{item.path.file_mode | default(0744) }}'
+  loop: '{{_nginx_finalized_files | dict2items(key_name="file_id", value_name="path")}}'
+  tags: files

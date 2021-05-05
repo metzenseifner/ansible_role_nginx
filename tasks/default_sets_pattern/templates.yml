@@ -1,0 +1,54 @@
+---
+# Handle templates
+- name: "Templates.-1.Initializing empty _{{ansible_role_name}}_disabled_templates set (performance optimization)"
+  set_fact:
+    _nginx_disabled_templates: {}
+  tags: templates
+
+- name: "Templates.0.Initializing empty _{{ansible_role_name}}_finalized_templates set (performance optimization)"
+  set_fact:
+    _nginx_finalized_templates: {}
+  tags: templates
+
+- name: "Templates.1.Collecting _{{ansible_role_name}}_disabled_templates set"
+  set_fact:
+    _nginx_disabled_templates: '{{ _nginx_disabled_templates | combine({item.file_id: item.path}) }}'
+  loop: '{{ nginx_templates | dict2items(key_name="file_id", value_name="path") }}'
+  when: 'item.path.disabled | default(false)'
+  tags: templates
+
+- name: "Templates.2.Removing disabled templates from {{ansible_role_name}}_default_templates set"
+  set_fact:
+    _nginx_default_templates: '{{ _nginx_default_templates | combine({item.file_id: item.path}) }}'
+  loop: '{{ _nginx_default_templates | dict2items(key_name="file_id", value_name="path") }}'
+  when: 'item.file_id not in _nginx_disabled_templates.keys()'
+  tags: templates
+
+- name: "Templates.3.Append {{ansible_role_name}}_templates to {{ansible_role_name}}_finalized_templates set"
+  set_fact:
+    _nginx_finalized_templates: '{{ _nginx_finalized_templates | combine({item.file_id: item.path}) }}'
+  loop: '{{ _nginx_default_templates | dict2items(key_name="file_id", value_name="path") }}'
+  when: 'item.path.disabled | default(false) == false'
+  tags: templates
+
+- name: "Templates.4.Installing parent directories"
+  file:
+    path: '{{item.path.dest | dirname}}'
+    state: directory
+    recurse: true 
+    owner: '{{item.path.user | default(nginx_user)}}'
+    group: '{{item.path.group | default(nginx_group)}}'
+    mode: '{{item.path.dir_mode | default(0755)}}'
+  loop: '{{_nginx_finalized_templates | dict2items(key_name="file_id", value_name="path")}}'
+  when: '"/" in item.path.dest'
+  tags: templates
+
+- name: "Templates.5.Installing templates"
+  copy:
+    src: '{{item.path.src}}'
+    dest: '{{item.path.dest}}'
+    owner: '{{item.path.user | default(nginx_user)}}'
+    group: '{{item.path.group | default(nginx_group)}}'
+    mode: '{{item.path.file_mode | default(0744) }}'
+  loop: '{{_nginx_finalized_templates | dict2items(key_name="file_id", value_name="path") }}'
+  tags: templates

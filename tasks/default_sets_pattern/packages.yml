@@ -1,0 +1,36 @@
+---
+- name: "Packages.-1.Initializing empty _{{ansible_role_name}}_disabled_packages set (performance optimization)"
+  set_fact:
+    _nginx_disabled_packages: {} 
+  tags: packages
+
+- name: "Packages.0.Initializing empty _{{ansible_role_name}}_finalized_packages set (performance optimization)"
+  set_fact:
+    _nginx_finalized_packages: {} 
+  tags: packages
+
+- name: "Packages.1.Collecting _{{ansible_role_name}}_disabled_packages set"
+  set_fact:
+    _nginx_disabled_packages: '{{ _nginx_disabled_packages | combine({item.file_id: item.settings}) }}'
+  loop: '{{nginx_packages | dict2items(key_name="file_id", value_name="settings") }}'
+  when: 'item.settings[*].disabled | default(false)'
+  tags: packages
+
+- name: "Packages.2.Removing disabled packages from _{{ansible_role_name}}_default_packages set"
+  set_fact:
+    _nginx_default_packages: '{{ _nginx_default_packages | combine({item.file_id: item.path}) }}'
+  loop: '{{ _nginx_default_packages | dict2items(key_name="file_id", value_name="path") }}'
+  when: 'item.file_id not in _nginx_disabled_packages'
+  tags: packages
+
+- name:
+  debug:
+    msg: '{{item.0.package_id}} + {{item.1}} + {{ansible_os_family |lower}}'
+  loop: '{{ _nginx_default_packages | dict2items(key_name="package_id", value_name="settings") | subelements("settings")}}'
+
+- name: "Packages.3.Append {{ansible_role_name}}_packages to _{{ansible_role_name}}_finalized_packages set"
+  set_fact:
+    _nginx_finalized_packages: '{{ _nginx_finalized_packages | combine({item.0.package_id: item.1.name}) }}'
+  loop: '{{ _nginx_default_packages | dict2items(key_name="package_id", value_name="settings") | subelements("settings")}}'
+  when: '((item.1.disabled | default(false)) == false) and (item.1.os == (ansible_os_family | lower | default("unknown")))'
+  tags: packages

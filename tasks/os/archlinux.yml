@@ -1,0 +1,7 @@
+---
+
+- name: "Packages.4.Installing packages"
+  aur:
+    name: '{{item.value}}'
+    state: present
+  loop: '{{_nginx_finalized_packages | dict2items(key_name="package", value_name="value")}}'

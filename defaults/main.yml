@@ -1,0 +1,54 @@
+---
+nginx_user: http
+nginx_group: http
+nginx_server_name: localhost
+nginx_etc_path: '/etc/nginx'
+nginx_ssl_path: '{{nginx_etc_path}}/ssl'
+nginx_dhparam_size: 2048
+nginx_html_root: '/usr/share/nginx/html'
+
+nginx_dhparam:
+  path: "/etc/nginx/ssl/dhparam.pem"
+  size: 2048
+  user: http
+  group: http
+  dir_mode: 0500
+  file_mode: 0400
+
+# Sets
+nginx_packages: {}
+nginx_files: {}
+nginx_templates: {}
+
+# default packages
+_nginx_default_packages:
+  nginx:
+    - os: archlinux 
+      name: nginx-mainline
+    - os: redhat 
+      name: nginx
+  http_headers_more:
+    - os: archlinux
+      disabled: true
+    - os: redhat
+      name: nginx-ngx_http_headers_more_filter_module.x86_64
+  ngx_http_shibboleth_module:
+    - os: archlinux
+      disabled: true
+    - os: redhat
+      name: nginx-ngx_http_shibboleth_module.x86_64
+
+# default files
+_nginx_default_files: {}
+#  ssl_private_key:
+#    src: '{{role_path}}/tmp/self_signed.key'
+#    dest: '/etc/nginx/ssl/private.key'
+#  ssl_certificate:
+#    src: '{{role_path}}/tmp/self_signed.cert'
+#    dest: '/etc/nginx/ssl/public.cert'
+
+# default templates
+_nginx_default_templates:
+  mime.types:
+    src: '{{role_path}}/templates/mime.types'
+    dest: '/etc/nginx/mime.types' 

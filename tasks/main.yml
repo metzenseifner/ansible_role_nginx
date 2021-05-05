@@ -1,0 +1,43 @@
+---
+
+- name: "Including packages set tasks (default sets pattern)"
+  include: default_sets_pattern/packages.yml
+  
+- name: "Including Red Hat Linux-specific tasks"
+  include: os/redhat.yml
+  when: ansible_os_family == "RedHat"
+
+- name: "Including Arch Linux-specific tasks"
+  include: os/archlinux.yml
+  when: ansible_os_family == "Archlinux"
+
+- name: Ensure Diffie-Hellman Parameters directory exists
+  file:
+    path: '{{nginx_dhparam.path | dirname}}'
+    state: directory
+    mode: '{{nginx_dhparam.dir_mode}}'
+    owner: '{{nginx_user}}'
+    group: '{{nginx_group}}'
+
+- name: Generate Diffie-Hellman Parameters
+  openssl_dhparam:
+    path: '{{nginx_dhparam.path}}'
+    size: '{{nginx_dhparam.size}}'
+    mode: '{{nginx_dhparam.file_mode}}'
+    owner: '{{nginx_user}}'
+    group: '{{nginx_group}}'
+
+- name: "Including files set tasks (default sets pattern)"
+  include: default_sets_pattern/files.yml
+  notify: restart_nginx
+
+- name: "Including templates set tasks (default sets pattern)"
+  include: default_sets_pattern/templates.yml
+  notify: restart_nginx
+
+- name: Start and enable Nginx
+  service:
+    name: nginx
+    state: started
+    enabled: true
+
