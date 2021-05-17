@@ -38,7 +38,7 @@
     recurse: true 
     owner: '{{item.path.user | default(nginx_user)}}'
     group: '{{item.path.group | default(nginx_group)}}'
-    mode: '{{item.path.dir_mode | default(0755)}}'
+    mode: '{{item.path.dir_mode | default("0755") }}'
   loop: '{{_nginx_finalized_templates | dict2items(key_name="file_id", value_name="path")}}'
   when: '"/" in item.path.dest'
   tags: templates
@@ -49,6 +49,6 @@
     dest: '{{item.path.dest}}'
     owner: '{{item.path.user | default(nginx_user)}}'
     group: '{{item.path.group | default(nginx_group)}}'
-    mode: '{{item.path.file_mode | default(0744) }}'
+    mode: '{{item.path.file_mode | default("0744") }}'
   loop: '{{_nginx_finalized_templates | dict2items(key_name="file_id", value_name="path") }}'
   tags: templates
