@@ -27,16 +27,16 @@ _nginx_default_packages:
       name: nginx-mainline
     - os: redhat 
       name: nginx
-  http_headers_more:
-    - os: archlinux
-      disabled: true
-    - os: redhat
-      name: nginx-ngx_http_headers_more_filter_module.x86_64
-  ngx_http_shibboleth_module:
-    - os: archlinux
-      disabled: true
-    - os: redhat
-      name: nginx-ngx_http_shibboleth_module.x86_64
+#  http_headers_more:
+#    - os: archlinux
+#      disabled: true
+#    - os: redhat
+#      name: nginx-ngx_http_headers_more_filter_module.x86_64
+#  ngx_http_shibboleth_module:
+#    - os: archlinux
+#      disabled: true
+#    - os: redhat
+#      name: nginx-ngx_http_shibboleth_module.x86_64
 
 # default files
 _nginx_default_files: {}
