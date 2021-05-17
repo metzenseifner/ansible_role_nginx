@@ -30,7 +30,7 @@
 
 - name: "Packages.3.Append {{ansible_role_name}}_packages to _{{ansible_role_name}}_finalized_packages set"
   set_fact:
-    _nginx_finalized_packages: '{{ _nginx_finalized_packages | combine({item.0.package_id: item.1.name}) }}'
+    _nginx_finalized_packages: '{{ _nginx_finalized_packages | combine({item.0.package_id: item.1}) }}'
   loop: '{{ _nginx_default_packages | dict2items(key_name="package_id", value_name="settings") | subelements("settings")}}'
   when: '((item.1.disabled | default(false)) == false) and (item.1.os == (ansible_os_family | lower | default("unknown")))'
   tags: packages
