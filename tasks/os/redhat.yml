@@ -2,6 +2,6 @@
 
 - name: "Packages.4.Installing packages"
   dnf:
-    name: '{{item.value}}'
+    name: '{{item.value.name}}'
     state: present
   loop: '{{_nginx_finalized_packages | dict2items(key_name="package", value_name="value")}}'
